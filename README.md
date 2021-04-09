@@ -402,6 +402,201 @@ GetHealth -> float - float -> Set Health
 PROBLEM SOLVE : HUDOverlay -> Class Settings -> Force Slow Construction Path -> pipa
 
 **HUD C++**
+
 Create a Widget Blueprint for Coins and wrap the box , paste the coin icon and the Text. Than make a Bluprint Logic. ( Same like Health and Stamina)
+
+
+**Explosive.h**
+```
+UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "Damage")
+float Damage;
+```
+**Explosive.cpp**
+**OnOverlapBegin()**
+```
+if (OtherActor)
+{
+AMain* Main = Cast<AMain>(OtherActor);
+if (Main)
+{
+Main->DecrementHealth(Damage);
+}
+}
+```
+**Main.h (Character)** 
+```
+void DecrementHealth(float Amount);
+void Die();
+void IncrementCoins(int32 Amount);
+```
+**Main.cpp**
+```
+DecrementHealth(float Amount)
+{
+if (Health - Amount <= 0.0f)
+{
+Health -= Amount;
+Die();
+}
+else
+{
+Health -= Amount;
+}
+}
+ 
+Die()
+{
+UE_LOG(LogTemp, Warning, TEXT("You Died!"));
+}
+ 
+IncrementCoins(int32 Amount) 
+{
+Coins += Amount;
+}
+```
+
+Same in **PickUp.h** and **PickUp.cpp**
+
+**Staminabar + Sprinting**
+**Main.h**
+```
+enum class EMovementStatus : uint8
+{
+EMS_Normal UMETA(DisplayName = "Normal"),
+EMS_Sprinting UMETA(DisplayName = "Sprinting"),
+ 
+EMS_MAX UMETA(DisplayName = "DefaultMAX")
+};
+ 
+UENUM(BlueprintType)
+enum class EStaminaStatus : uint8
+{
+ESS_Normal UMETA(DisplayName = "Normal"),
+ESS_BelowMinimum UMETA(DisplayName = "BelowMinimum"),
+ESS_Exhausted UMETA(DisplayName = "Exhausted"),
+ESS_ExhaustedRecovering UMETA(DisplayName = "ExhaustedRecovering"),
+ 
+ESS_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
+UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category = "Enums")
+EMovementStatus MovementStatus;
+ 
+UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Enums")
+EStaminaStatus StaminaStatus;
+ 
+FORCEINLINE void SetStaminaStatus(EStaminaStatus Status) { StaminaStatus = Status; }
+ 
+float StaminaDrainRate;
+float MinSprintStamina;
+void SetMovementStatus(EMovementStatus Status);
+float RunningSpeed;
+float SprintingSpeed;
+bool bShiftKeyDown;
+void ShiftKeyDown();
+void ShiftKeyUp();
+```
+**Main.cpp**
+**Constructor**
+```
+RunningSpeed = 650.0f;
+SprintingSpeed = 950.0f;
+bShiftKeyDown = false;
+MovementStatus = EMovementStatus::EMS_Normal;
+StaminaStatus = EStaminaStatus::ESS_Normal;
+StaminaDrainRate = 25.0f;
+MinSprintStamina = 50.0f;
+```
+**Tick()**
+```
+TooLong 
+```
+**SetupPlayerInputComponent()**
+```
+PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AMain::ShiftKeyDown);
+PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AMain::ShiftKeyUp);
+```
+**SetMovementStatus()**
+```
+MovementStatus = Status;
+if (MovementStatus == EMovementStatus::EMS_Sprinting)
+{
+GetCharacterMovement()->MaxWalkSpeed = SprintingSpeed;
+}
+else
+{
+GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
+}
+```
+**ShiftKeyDown()**
+```
+bShiftKeyDown = true;
+```
+**ShiftKeyUp()**
+```
+bShiftKeyDown = false;
+```
+
+**MainAnimInstance.h**
+```
+UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")class AMain* Main;
+```
+**MainAnimInstance.cpp**
+```
+NativeInitializeAnimation()if (Pawn){Main = Cast<AMain>(Pawn);}
+UpdateAnimationProperties()if (Main == nullptr){Main = Cast<AMain>(Pawn);}
+```
+
+**MainAnim_BP (BLUEPRINT)**
+
+In Sprinting Two_Cycle_Sprint -> Output Animation Pose
+
+
+From I/W/R -> Sprinting ( new State )
+
+TransitionRule : GetMain -> GetMovementStatus -> == (equalequal)->Result
+
+
+From Sprinting -> Back to I/W/R
+
+TransitionRule : Same -> != (not equal) -> Result
+
+
+From Sprinting -> JumpStart
+
+TransitionRule : IsInAir -> Result
+
+
+**StaminaBar (Widget)**
+
+Appearance - Fill Color and Opacity -> Bind
+
+Make 4 Linear Color Variable ( Normal, BellowMin, ExhaustedRec,StaminaBarColor)
+
+BP:
+
+GetFillColorAndOpacity -> IsValid?
+
+RefToMain -> IsValid?
+
+GetPlayerPawn -> CastToMain_BP
+
+
+
+IsValid? ( IsNOTValid ) -> Set (RefToMain)  + Normal -> Set(StaminaBarColor) + Stamina Bar Color -> Return Node
+
+
+
+IsValid? (IsValid) + RefToMain + GetStaminaStatus -> Switch on EStaminaStatus
+
+(Normal)-> Normal -> Set(StaminaBarColor)-> Return Node
+
+(BellowMin)-> BellowMin -> Set(StaminaBarColor)-> Return Node
+
+(Exhausted)-> Normal ->Set(StaminaBarColor)-> Return Node
+
+(Exhausted Rec)-> Exhausted Rec -> Set(StaminaBarColor) -> Return Node
+
+
 
 
