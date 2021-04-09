@@ -383,11 +383,8 @@ FirstProject.Build.cs -> " UMG "  + -> "Slate", "SlateCore"
 5.HUDOverlay Widget Blueprint - > Set it ( Add HealthBar + StaminaBar to it)
 
 6.HealthBar -> Set it -> Add a ProgressBar to it and Create Binding and give logic.
-
 Get Percent + (Get)Ref To Main ( Make a variable in BP ) -> IS Valid? -> Return Node
-
 Ref To Main -> Get Health + Get Max Health -> float / float -> Return Node
-
 Get Player Pawn -> Cast To Main_BP -> (Set)Ref To Main -> Return Node
 
 7.StaminaBar -> the same
