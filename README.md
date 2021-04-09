@@ -129,3 +129,57 @@ Event Lower Floor Switch (Play) + Event Raise Floor Switch (Reverse) + Get World
 
 > #1 Spawn Critter on random position with effect - SpawnVolume C++ (Actor) Class
 > 
+
+**.H**
+```
+UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category = "Spawning")
+class UBoxComponent* SpawningBox;
+ 
+UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Spawning")
+TSubclassOf<class ACritter> PawnToSpawn;
+ 
+UFUNCTION(BlueprintPure, Category = "Spawning")
+FVector GetSpawnPoint();
+ 
+UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Spawning")
+void SpawnOurPawn(UClass* ToSpawn, const FVector& Location);
+```
+**.CPP**
+**Constructor**
+```
+SpawningBox = CreateDefaultSubobject<UBoxComponent>(TEXT("SpanningBox"));
+```
+**GetSpawnPoint()**
+```
+FVector Extent = SpawningBox->GetScaledBoxExtent();
+FVector Origin = SpawningBox->GetComponentLocation();
+FVector Point = UKismetMathLibrary::RandomPointInBoundingBox(Origin, Extent);
+return Point;
+```
+**SpawnOurPawn_Implementation(UClass* ToSpawn, const FVector& Location)**
+```
+if (ToSpawn)
+{
+UWorld* World = GetWorld();
+FActorSpawnParameters SpawnParams;
+if (World)
+{
+ACritter* CritterSpawn = World->SpawnActor<ACritter>(ToSpawn,Location,FRotator(0.f), SpawnParams);
+}}
+```
+
+SpawnVolume_BP- SpawnVolume_BP(self) - Pawn to Spawn set to Critter_BP
+
+BP SIDE 
+
+Event BeginPlay + Pawn to Spawn ( Getter ) + Get Spawn Point ( Getter ) - Spawn Our Pawn ( BlueprintCallable BLUE )
+
+Event Spawn Our Pawn ( To Spawn + Location) - Parent : Spawn Our Pawn ( To Spawn + Location)   ( to create it:  right click -> add parent )
+
+Event Spawn Our Pawn (Execution) - Spawn Ermitter at Location - Parent: Spawn Our Pawn (Execution )
+
+
+
+
+
+
