@@ -509,7 +509,97 @@ MinSprintStamina = 50.0f;
 ```
 **Tick()**
 ```
-TooLong 
+	float DeltaStamina = StaminaDrainRate * DeltaTime;
+	
+	switch (StaminaStatus)
+	{
+	case EStaminaStatus::ESS_Normal:
+		if (bShiftKeyDown)
+		{
+			if (Stamina - DeltaStamina <= MinSprintStamina)
+			{
+				SetStaminaStatus(EStaminaStatus::ESS_BelowMinimum);
+				Stamina -= DeltaStamina;
+			}
+			else
+			{
+				Stamina -= DeltaStamina;
+			}
+			SetMovementStatus(EMovementStatus::EMS_Sprinting);
+		}
+		else // Shift key up
+		{
+			if (Stamina + DeltaStamina >= MaxStamina)
+			{
+				Stamina = MaxStamina;
+			}
+			else
+			{
+				Stamina += DeltaStamina;
+			}
+			SetMovementStatus(EMovementStatus::EMS_Normal);
+		}
+		break;
+	case EStaminaStatus::ESS_BelowMinimum:
+		if(bShiftKeyDown)
+		{
+			if (Stamina - DeltaStamina <= 0.0f)
+			{
+				SetStaminaStatus(EStaminaStatus::ESS_Exhausted);
+				Stamina = 0.0f;
+				SetMovementStatus(EMovementStatus::EMS_Normal);
+			}
+			else
+			{
+				Stamina -= DeltaStamina;
+				SetMovementStatus(EMovementStatus::EMS_Sprinting);
+			}
+		}
+		else // Shift key up
+		{
+			if (Stamina + DeltaStamina >= MinSprintStamina)
+			{
+				SetStaminaStatus(EStaminaStatus::ESS_Normal);
+				Stamina += DeltaStamina;
+			}
+			else
+			{
+				Stamina += DeltaStamina;
+
+			}
+			SetMovementStatus(EMovementStatus::EMS_Normal);
+		}
+		break;
+
+	case EStaminaStatus::ESS_Exhausted:
+		if (bShiftKeyDown)
+		{
+			Stamina = 0.0f;
+		}
+		else // Shift key up
+		{
+			SetStaminaStatus(EStaminaStatus::ESS_ExhaustedRecovering);
+			Stamina += DeltaStamina;
+		}
+		SetMovementStatus(EMovementStatus::EMS_Normal);
+		break;
+
+	case EStaminaStatus::ESS_ExhaustedRecovering:
+		if (Stamina + DeltaStamina >= MinSprintStamina)
+		{
+			SetStaminaStatus(EStaminaStatus::ESS_Normal);
+			Stamina += DeltaStamina;
+		}
+		else
+		{
+			Stamina += DeltaStamina;
+		}
+		SetMovementStatus(EMovementStatus::EMS_Normal);
+		break;
+
+	default:
+		;
+	}
 ```
 **SetupPlayerInputComponent()**
 ```
@@ -598,5 +688,34 @@ IsValid? (IsValid) + RefToMain + GetStaminaStatus -> Switch on EStaminaStatus
 (Exhausted Rec)-> Exhausted Rec -> Set(StaminaBarColor) -> Return Node
 
 
+> DEBUG TOOLKIT
+> 
 
+**Main.h**
+```
+TArray<FVector> PickupLocations; // store the location
+UFUNCTION(BlueprintCallable)
+void ShowPickupLocations();
+```
+**Main.cpp**
+```
+ShowPickupLocations()
+{
+for (int32 i = 0; i < PickupLocations.Num();i++)
+{
+UKismetSystemLibrary::DrawDebugSphere(this, PickupLocations[i], 25.0f, 8, FLinearColor::Yellow, 10.0f, 0.5f);
+}
+}
+```
+**TO Pickup.cpp - ADD LINE**
+**OnOverlapBegin()**
+```
+	Main->PickupLocations.Add(GetActorLocation());
+```
 
+**TO TEST**
+Main_BP ( Character ) 
+
+BP in Event Graph : 
+
+N Key (Pressed) -> Show Pickup Locations
