@@ -687,6 +687,7 @@ IsValid? (IsValid) + RefToMain + GetStaminaStatus -> Switch on EStaminaStatus
 
 (Exhausted Rec)-> Exhausted Rec -> Set(StaminaBarColor) -> Return Node
 
+&nbsp;
 
 > DEBUG TOOLKIT
 > 
