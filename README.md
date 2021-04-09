@@ -370,3 +370,25 @@ UE_LOG;
 > HUD
 > 
 
+FirstProject.Build.cs -> " UMG "  + -> "Slate", "SlateCore"
+
+1.Create a C++ PlayerController -> Create HUDOverlayAsset + HUDOverlay
+
+2.Make a BP from PlayerController -> Set HUDOverlay Asset to HUDOverlay
+
+3.GameMode - > Set Player Controller Class to MainPlayerController_BP
+
+4.Create WidgetBlueprint (HUDOverlay , HealthBar , StaminaBar (Duplicate Healthbar)
+
+5.HUDOverlay Widget Blueprint - > Set it ( Add HealthBar + StaminaBar to it)
+
+6.HealthBar -> Set it -> Add a ProgressBar to it and Create Binding and give logic.
+
+Get Percent + (Get)Ref To Main ( Make a variable in BP ) -> IS Valid? -> Return Node
+
+Ref To Main -> Get Health + Get Max Health -> float / float -> Return Node
+
+Get Player Pawn -> Cast To Main_BP -> (Set)Ref To Main -> Return Node
+
+7.StaminaBar -> the same
+
