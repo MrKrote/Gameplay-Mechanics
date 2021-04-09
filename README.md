@@ -357,10 +357,14 @@ UE_LOG;
 Super::OnOverlapBegin(PARAMETERS);
 UE_LOG;
 ```
-Static Mesh
+1.Static Mesh
 
-IdleParticleComponent - Particles ( Template ) 
+2.IdleParticleComponent - Particles ( Template ) 
 
-IdleParticleComponent - Sound
+3.IdleParticleComponent - Sound
 
-_BP (Self) - Overlap Particles
+4._BP (Self) - Overlap Particles
+
+> HUD
+> 
+
