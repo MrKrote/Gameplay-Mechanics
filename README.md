@@ -573,7 +573,7 @@ Appearance - Fill Color and Opacity -> Bind
 
 Make 4 Linear Color Variable ( Normal, BellowMin, ExhaustedRec,StaminaBarColor)
 
-BP:
+**BP LOGIC:**
 
 GetFillColorAndOpacity -> IsValid?
 
