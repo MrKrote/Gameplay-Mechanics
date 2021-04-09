@@ -383,9 +383,25 @@ FirstProject.Build.cs -> " UMG "  + -> "Slate", "SlateCore"
 5.HUDOverlay Widget Blueprint - > Set it ( Add HealthBar + StaminaBar to it)
 
 6.HealthBar -> Set it -> Add a ProgressBar to it and Create Binding and give logic.
+
 Get Percent + (Get)Ref To Main ( Make a variable in BP ) -> IS Valid? -> Return Node
+
 Ref To Main -> Get Health + Get Max Health -> float / float -> Return Node
+
 Get Player Pawn -> Cast To Main_BP -> (Set)Ref To Main -> Return Node
 
 7.StaminaBar -> the same
+
+
+**TO TEST IT : Main_BP ( Charachter )**
+
+Event Graph : N key -> Set Health
+
+GetHealth -> float - float -> Set Health
+
+PROBLEM SOLVE : HUDOverlay -> Class Settings -> Force Slow Construction Path -> pipa
+
+**HUD C++**
+Create a Widget Blueprint for Coins and wrap the box , paste the coin icon and the Text. Than make a Bluprint Logic. ( Same like Health and Stamina)
+
 
