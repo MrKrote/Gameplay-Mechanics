@@ -156,7 +156,7 @@ FVector Origin = SpawningBox->GetComponentLocation();
 FVector Point = UKismetMathLibrary::RandomPointInBoundingBox(Origin, Extent);
 return Point;
 ```
-**SpawnOurPawn_Implementation(UClass* ToSpawn, const FVector& Location)**
+**SpawnOurPawn_Implementation(UClass* ToSpawn,const FVector& Location)**
 ```
 if (ToSpawn)
 {
@@ -178,8 +178,189 @@ Event Spawn Our Pawn ( To Spawn + Location) - Parent : Spawn Our Pawn ( To Spawn
 
 Event Spawn Our Pawn (Execution) - Spawn Ermitter at Location - Parent: Spawn Our Pawn (Execution )
 
+&nbsp;
 
+> Moving Platform
+> 
 
+**.H**
+```
+UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Platform")
+class UStaticMeshComponent* Mesh;
+UPROPERTY(EditAnywhere)
+FVector StartPoint;
+UPROPERTY(EditAnywhere, meta = (MakeEditWidget = "true"))
+FVector EndPoint;
+UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category = "Platform")
+float InterpSpeed;
+UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Platform")
+FTimerHandle InterpTimer;
+UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Platform")
+bool bInterping;
+UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Platform")
+float InterpTime;
+UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Platform")
+float Distance;
+ 
+void ToggleInterping();
+void SwapVectors(FVector& VecOne, FVector& VecTwo);
+```
+**.CPP**
+**Constructor**
+```
+Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+RootComponent = Mesh;
+ 
+StartPoint = FVector(0.f);
+EndPoint = FVector(0.f);
+InterpSpeed = 4.0f;
+InterpTime = 2.0f;
+bInterping = false;
+```
+**BeginPlay()**
+```
+StartPoint = GetActorLocation();
+EndPoint += StartPoint;
+GetWorldTimerManager().SetTimer(InterpTimer, this, &AFloatingPlatform::ToggleInterping, InterpTime);
+Distance = (EndPoint - StartPoint).Size();
+```
+**Tick ()**
+```
+if (bInterping)
+{
+FVector CurrentLocation = GetActorLocation();
+FVector Interp = FMath::VInterpTo(CurrentLocation, EndPoint, DeltaTime, InterpSpeed);
+SetActorLocation(Interp);
+float DistanceTraveled = (GetActorLocation() - StartPoint).Size();
+if (Distance - DistanceTraveled <= 1.0f)
+{
+ToggleInterping();
+GetWorldTimerManager().SetTimer(InterpTimer, this, &AFloatingPlatform::ToggleInterping, InterpTime);
+SwapVectors(StartPoint, EndPoint);
+}}
+```
+**ToggleInterping()**
+```
+{
+bInterping = !bInterping;
+}
+```
+**SwapVectors(FVector& VecOne, FVector& VecTwo)**
+```
+{
+FVector Temp = VecOne;
+VecOne = VecTwo;
+VecTwo = Temp;
+}
+```
 
+&nbsp;
 
+> Item + PickUP + Explosive
+> 
+**Item.h**
+```
+UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item | Collision")
+class USphereComponent* CollisionVolume;
+ 
+UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item | Mesh")
+class UStaticMeshComponent* Mesh;
+ 
+UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Particles")
+class UParticleSystemComponent* IdleParticleComponent;
+ 
+UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Particles")
+class UParticleSystem* OverlapParticles;
+ 
+UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Sounds")
+class USoundCue* OverlapSound;
+ 
+UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | ItemProperties")
+bool bRotate;
+ 
+UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | ItemProperties")
+float RotationRate;
+ 
+UFUNCTION()
+virtual void OnOverlapBegin(PARAMETERS);
+UFUNCTION()
+virtual void OnOverlapEnd(PARAMETERS);
+```
+**Item.cpp**
+**Constructor**
+```
+CollisionVolume = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionVolume"));
+RootComponent = CollisionVolume;
+ 
+Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+Mesh->SetupAttachment(GetRootComponent());
+ 
+IdleParticleComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("IdleParticleComponent"));
+IdleParticleComponent->SetupAttachment(GetRootComponent());
+ 
+bRotate = false;
+RotationRate = 45.0f;
+```
+**BeginPlay()**
+```
+CollisionVolume->OnComponentBeginOverlap.AddDynamic(this, &AItem::OnOverlapBegin);
+CollisionVolume->OnComponentEndOverlap.AddDynamic(this, &AItem::OnOverlapEnd);
+```
+**Tick()**
+```
+if (bRotate)
+{
+FRotator Rotation = GetActorRotation();
+Rotation.Yaw += DeltaTime * RotationRate;
+SetActorRotation(Rotation);
+}
+```
+**OnOverlapBegin ( PARAMETERS )**
+```
+UE_LOG(LogTemp, Warning, TEXT("Super::OnOverlapBegin"));
+ 
+if (OverlapParticles)
+{
+UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), OverlapParticles, GetActorLocation(), FRotator(0.f), true);
+}
+if (OverlapSound)
+{
+UGameplayStatics::PlaySound2D(this, OverlapSound);
+}
+Destroy();
+```
+**OnOverlapEnd ( PARAMETERS )**
+```
+UE_LOG(LogTemp, Warning, TEXT("Super::OnOverlapEnd"));
+```
 
+In Editor -> Create C++ Class derived from Item ( INHERIT )
+
+1. Explosive
+
+2. Pickup
+
+**Explosive.h**
+```
+AExplosive();
+virtual void OnOverlapBegin(PARAMETERS) override;
+virtual void OnOverlapEnd(PARAMETERS) override;
+```
+**Explosive.cpp**
+**OnOverlapBegin(PARAMETERS)**
+```
+Super::OnOverlapBegin(PARAMETERS);
+UE_LOG;
+```
+**OnOverlapEnd(PARAMETERS)**
+```
+Super::OnOverlapBegin(PARAMETERS);
+UE_LOG;
+```
+Static Mesh
+
+IdleParticleComponent - Particles ( Template ) 
+
+IdleParticleComponent - Sound
+
+_BP (Self) - Overlap Particles
